@@ -1,7 +1,8 @@
-import React from "react";
+import React from 'react';
+import { Playground } from './Playground';
 
 function App() {
-  return <h1>hello world</h1>;
+  return <Playground />;
 }
 
 export default App;
