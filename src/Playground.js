@@ -15,12 +15,12 @@ export const playground = {
       },
     });
   },
-  async 'demo2: add some key values pairs in store1'() {
+  async 'demo2: Add some key values pairs in store1'() {
     const db1 = await openDB('db1', 1);
     db1.add('store1', 'hello world', 'message');
     db1.add('store1', true, 'delivered');
   },
-  async 'demo3: error handling'() {
+  async 'demo3: Error handling'() {
     const db1 = await openDB('db1', 1);
     db1
       .add('store1', 'hello again!!', 'new message')
