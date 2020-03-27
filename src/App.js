@@ -1,8 +1,19 @@
 import React from 'react';
-import { Playground } from './Playground';
+import { playground } from './Playground';
 
 function App() {
-  return <Playground />;
+  return (
+    <>
+      {Object.entries(playground).map(entry => {
+        const [key, value] = entry;
+        return (
+          <div key={key}>
+            <button onClick={value}>{key}</button>
+          </div>
+        );
+      })}
+    </>
+  );
 }
 
 export default App;

@@ -1,9 +1,7 @@
-import React from 'react';
 import { openDB } from 'idb';
 
-const playground = {
-  // create 4 stores in 2 dbs
-  'demo1: create 2 dbs and 4 stores'() {
+export const playground = {
+  'demo1: Getting started'() {
     openDB('db1', 1, {
       upgrade(db) {
         db.createObjectStore('store1');
@@ -34,18 +32,3 @@ const playground = {
       });
   },
 };
-
-export function Playground() {
-  return (
-    <>
-      {Object.entries(playground).map(entry => {
-        const [key, value] = entry;
-        return (
-          <div key={key}>
-            <button onClick={value}>{key}</button>
-          </div>
-        );
-      })}
-    </>
-  );
-}
