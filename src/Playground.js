@@ -38,4 +38,13 @@ export const playground = {
     db2.add('store4', { id: 'cat003', strength: 8, speed: 12 });
     db2.add('store4', { id: 'cat004', strength: 12, speed: 13 });
   },
+  async 'demo5: retrieve values'() {
+    const db2 = await openDB('db2', 1);
+    // retrieve by key
+    db2.get('store3', 'cat001').then(console.log);
+    // retrieve all
+    db2.getAll('store3').then(console.log);
+    // count the totle number or items in a store
+    db2.count('store3').then(console.log);
+  },
 };
