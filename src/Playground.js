@@ -56,4 +56,13 @@ export const playground = {
     const db2 = await openDB('db2', 1);
     db2.put('store3', { id: 'cat001', strength: 99, speed: 99 });
   },
+  async 'demo7: multiple operations within one transaction'() {
+    const db2 = await openDB('db2', 1);
+    // open a new transaction, declare which stores are involved
+    let transaction = db2.transaction(['store3', 'store4'], 'readwrite');
+    // do multiple things inside the transaction
+    let superCat = await transaction.objectStore('store3').get('cat001');
+    transaction.objectStore('store3').delete('cat001');
+    transaction.objectStore('store4').add(superCat);
+  },
 };
