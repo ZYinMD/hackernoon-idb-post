@@ -65,4 +65,21 @@ export const playground = {
     transaction.objectStore('store3').delete('cat001');
     transaction.objectStore('store4').add(superCat);
   },
+  async 'demo8: transaction on a single store, and error handling'() {
+    // we'll only operate on one store this time:
+    const db1 = await openDB('db1', 1);
+    // ↓ this is equal to db1.transaction(['store2'], 'readwrite'):
+    let transaction = db1.transaction('store2', 'readwrite');
+    // ↓ this is equal to transaction.objectStore('store2')...
+    transaction.store.add('foo', 'foo');
+    transaction.store.add('bar', 'bar');
+    // know if the transaction was successful:
+    transaction.done
+      .then(() => {
+        console.log('All steps success, changes committed!');
+      })
+      .catch(() => {
+        console.error('Something went wrong, transaction aborted');
+      });
+  },
 };
