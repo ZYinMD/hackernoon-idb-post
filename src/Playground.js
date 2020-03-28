@@ -47,4 +47,13 @@ export const playground = {
     // count the totle number or items in a store
     db2.count('store3').then(console.log);
   },
+  async 'demo6: replace item with same key'() {
+    // set db1/store1/delivered to be false:
+    const db1 = await openDB('db1', 1);
+    db1.put('store1', false, 'delivered');
+
+    // replace cat001 with a supercat
+    const db2 = await openDB('db2', 1);
+    db2.put('store3', { id: 'cat001', strength: 99, speed: 99 });
+  },
 };
