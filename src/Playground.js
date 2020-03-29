@@ -113,12 +113,12 @@ export const playground = {
         switch (oldVersion) {
           case 0:
             upgradeDB3fromV0toV1();
-          // do not break!
+          // falls through
           case 1:
             upgradeDB3fromV1toV2();
             break;
           default:
-            break;
+            console.error('unknown db version');
         }
 
         function upgradeDB3fromV0toV1() {
