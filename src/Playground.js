@@ -82,4 +82,50 @@ export const playground = {
         console.error('Something went wrong, transaction aborted');
       });
   },
+  async 'demo9: very explicitly create a new db and new store'() {
+    const db3 = await openDB('db3', 1, {
+      upgrade(db, oldVersion, newVersion, transaction) {
+        if (oldVersion === 0) upgradeDB3fromV0toV1();
+        function upgradeDB3fromV0toV1() {
+          db.createObjectStore('moreCats', { keyPath: 'id' });
+          new Array(100).fill().forEach((item, index) => {
+            let id = 'cat' + index.toString().padStart(3, '0');
+            let strength = Math.round(Math.random() * 100);
+            let speed = Math.round(Math.random() * 100);
+            transaction.objectStore('moreCats').add({ id, strength, speed });
+          });
+        }
+      },
+    });
+  },
+  async 'demo10: bump the version to add a store'() {
+    const db3 = await openDB('db3', 2, {
+      upgrade(db, oldVersion, newVersion, transaction) {
+        switch (oldVersion) {
+          case 0:
+            upgradeDB3fromV0toV1();
+          // do not break!
+          case 1:
+            upgradeDB3fromV1toV2();
+            break;
+          default:
+            break;
+        }
+        function upgradeDB3fromV0toV1() {
+          db.createObjectStore('moreCats', { keyPath: 'id' });
+          new Array(100).fill().forEach((item, index) => {
+            let id = 'cat' + index.toString().padStart(3, '0');
+            let strength = Math.round(Math.random() * 100);
+            let speed = Math.round(Math.random() * 100);
+            transaction.objectStore('moreCats').add({ id, strength, speed });
+          });
+        }
+        function upgradeDB3fromV1toV2() {
+          db.createObjectStore('userPreference');
+          transaction.objectStore('userPreference').add(false, 'use dark mode');
+          transaction.objectStore('userPreference').add(25, 'results per page');
+        }
+      },
+    });
+  },
 };
