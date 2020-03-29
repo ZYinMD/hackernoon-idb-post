@@ -86,6 +86,7 @@ export const playground = {
     const db3 = await openDB('db3', 1, {
       upgrade(db, oldVersion, newVersion, transaction) {
         if (oldVersion === 0) upgradeDB3fromV0toV1();
+
         function upgradeDB3fromV0toV1() {
           db.createObjectStore('moreCats', { keyPath: 'id' });
           new Array(100).fill().forEach((item, index) => {
@@ -97,8 +98,9 @@ export const playground = {
         }
       },
     });
+    db3.close();
   },
-  async 'demo10: bump the version to add a store'() {
+  async 'demo10: bump the version: either 0->2 or 1->2'() {
     const db3 = await openDB('db3', 2, {
       upgrade(db, oldVersion, newVersion, transaction) {
         switch (oldVersion) {
@@ -111,6 +113,7 @@ export const playground = {
           default:
             break;
         }
+
         function upgradeDB3fromV0toV1() {
           db.createObjectStore('moreCats', { keyPath: 'id' });
           new Array(100).fill().forEach((item, index) => {
@@ -127,5 +130,6 @@ export const playground = {
         }
       },
     });
+    db3.close();
   },
 };
