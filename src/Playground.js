@@ -49,6 +49,8 @@ export const playground = {
     db2.getAll('store3').then(console.log);
     // count the totle number or items in a store
     db2.count('store3').then(console.log);
+    // get all keys
+    db2.getAllKeys('store3').then(console.log);
     db2.close();
   },
   async 'demo6: replace item with same key'() {
@@ -98,8 +100,8 @@ export const playground = {
           db.createObjectStore('moreCats', { keyPath: 'id' });
           new Array(100).fill().forEach((item, index) => {
             let id = 'cat' + index.toString().padStart(3, '0');
-            let strength = Math.round(Math.random() * 100);
-            let speed = Math.round(Math.random() * 100);
+            let strength = Math.round(Math.random() * 10);
+            let speed = Math.round(Math.random() * 10);
             transaction.objectStore('moreCats').add({ id, strength, speed });
           });
         }
@@ -125,18 +127,96 @@ export const playground = {
           db.createObjectStore('moreCats', { keyPath: 'id' });
           new Array(100).fill().forEach((item, index) => {
             let id = 'cat' + index.toString().padStart(3, '0');
-            let strength = Math.round(Math.random() * 100);
-            let speed = Math.round(Math.random() * 100);
+            let strength = Math.round(Math.random() * 10);
+            let speed = Math.round(Math.random() * 10);
             transaction.objectStore('moreCats').add({ id, strength, speed });
           });
         }
         function upgradeDB3fromV1toV2() {
           db.createObjectStore('userPreference');
-          transaction.objectStore('userPreference').add(false, 'use dark mode');
-          transaction.objectStore('userPreference').add(25, 'results per page');
+          transaction.objectStore('userPreference').add(false, 'useDarkMode');
+          transaction.objectStore('userPreference').add(25, 'resultsPerPage');
         }
       },
     });
+    db3.close();
+  },
+  async 'demo11: upgrade db version even when no schema change is needed:'() {
+    const db3 = await openDB('db3', 3, {
+      upgrade: (db, oldVersion, newVersion, transaction) => {
+        switch (oldVersion) {
+          case 0:
+            upgradeDB3fromV0toV1();
+          // falls through
+          case 1:
+            upgradeDB3fromV1toV2();
+          // falls through
+          case 2:
+            upgradeDB3fromV2toV3();
+            break;
+          default:
+            console.error('unknown db version');
+        }
+
+        function upgradeDB3fromV0toV1() {
+          db.createObjectStore('moreCats', { keyPath: 'id' });
+          new Array(100).fill().forEach((item, index) => {
+            let id = 'cat' + index.toString().padStart(3, '0');
+            let strength = Math.round(Math.random() * 10);
+            let speed = Math.round(Math.random() * 10);
+            transaction.objectStore('moreCats').add({ id, strength, speed });
+          });
+        }
+        function upgradeDB3fromV1toV2() {
+          db.createObjectStore('userPreference');
+          transaction.objectStore('userPreference').add(false, 'useDarkMode');
+          transaction.objectStore('userPreference').add(25, 'resultsPerPage');
+        }
+        async function upgradeDB3fromV2toV3() {
+          const store = transaction.objectStore('userPreference');
+          store.put('English', 'language');
+          store.delete('resultsPerPage');
+          let colorTheme = 'automatic';
+          let useDarkMode = await store.get('useDarkMode');
+          if (oldVersion === 2 && useDarkMode === false) colorTheme = 'light';
+          if (oldVersion === 2 && useDarkMode === true) colorTheme = 'dark';
+          store.put(colorTheme, 'colorTheme');
+          store.delete('useDarkMode');
+        }
+      },
+    });
+    db3.close();
+  },
+  async 'demo12: create an index'() {
+    const db3 = await openDB('db3', 4, {
+      upgrade: (db, oldVersion, newVersion, transaction) => {
+        // upgrade to v4 in a less careful manner:
+        const store = transaction.objectStore('moreCats');
+        store.createIndex('strengthIndex', 'strength');
+      },
+    });
+    db3.close();
+  },
+  async 'demo13: query the index'() {
+    const db3 = await openDB('db3', 4);
+    const transaction = db3.transaction('moreCats');
+    const strengthIndex = transaction.store.index('strengthIndex');
+    // get all entries where the key is 10:
+    let strongestCats = await strengthIndex.getAll(10);
+
+    console.log('strongest cats: ', strongestCats);
+    // get the first entry where the key is 10:
+    let oneStrongCat = await strengthIndex.get(10);
+    console.log('a strong cat: ', oneStrongCat);
+    db3.close();
+  },
+  async 'demo14: query the index without writing transactions'() {
+    const db3 = await openDB('db3', 4);
+    // do similar things as demo13, but use single-action transaction wrappers:
+    let weakestCats = await db3.getAllFromIndex('moreCats', 'strengthIndex', 0);
+    console.log('weakest cats: ', weakestCats);
+    let oneWeakCat = await db3.getFromIndex('moreCats', 'strengthIndex', 0);
+    console.log('a weak cat: ', oneWeakCat);
     db3.close();
   },
 };
