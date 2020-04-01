@@ -47,7 +47,7 @@ export const playground = {
     db2.get('store3', 'cat001').then(console.log);
     // retrieve all
     db2.getAll('store3').then(console.log);
-    // count the totle number or items in a store
+    // count the total number of items in a store
     db2.count('store3').then(console.log);
     // get all keys
     db2.getAllKeys('store3').then(console.log);
@@ -63,11 +63,11 @@ export const playground = {
     db2.put('store3', { id: 'cat001', strength: 99, speed: 99 });
     db2.close();
   },
-  async 'demo7: multiple operations within one transaction'() {
+  async 'demo7: move supercat: 2 operations in 1 transaction:'() {
     const db2 = await openDB('db2', 1);
     // open a new transaction, declare which stores are involved
     let transaction = db2.transaction(['store3', 'store4'], 'readwrite');
-    // do multiple things inside the transaction
+    // do multiple things inside the transaction, if one fails all fail:
     let superCat = await transaction.objectStore('store3').get('cat001');
     transaction.objectStore('store3').delete('cat001');
     transaction.objectStore('store4').add(superCat);
@@ -78,13 +78,13 @@ export const playground = {
     const db1 = await openDB('db1', 1);
     // ↓ this is equal to db1.transaction(['store2'], 'readwrite'):
     let transaction = db1.transaction('store2', 'readwrite');
-    // ↓ this is equal to transaction.objectStore('store2')...
+    // ↓ this is equal to transaction.objectStore('store2').add(..)
     transaction.store.add('foo', 'foo');
     transaction.store.add('bar', 'bar');
-    // know if the transaction was successful:
+    // monitor if the transaction was successful:
     transaction.done
       .then(() => {
-        console.log('All steps success, changes committed!');
+        console.log('All steps succeeded, changes committed!');
       })
       .catch(() => {
         console.error('Something went wrong, transaction aborted');
@@ -143,7 +143,7 @@ export const playground = {
   },
   async 'demo11: upgrade db version even when no schema change is needed:'() {
     const db3 = await openDB('db3', 3, {
-      upgrade: (db, oldVersion, newVersion, transaction) => {
+      upgrade: async (db, oldVersion, newVersion, transaction) => {
         switch (oldVersion) {
           case 0:
             upgradeDB3fromV0toV1();
@@ -152,7 +152,7 @@ export const playground = {
             upgradeDB3fromV1toV2();
           // falls through
           case 2:
-            upgradeDB3fromV2toV3();
+            await upgradeDB3fromV2toV3();
             break;
           default:
             console.error('unknown db version');
@@ -220,7 +220,8 @@ export const playground = {
   },
   async 'demo15: find items matching a condition by using range'() {
     const db3 = await openDB('db3', 4);
-    // create some ranges. Note that IDBKeyRange is not imported from idb:
+    // create some ranges. Note that IDBKeyRange is a native browser API,
+    // it's not imported from idb, just use it:
     const strongRange = IDBKeyRange.lowerBound(8);
     const midRange = IDBKeyRange.bound(3, 7);
     const weakRange = IDBKeyRange.upperBound(2);
@@ -236,7 +237,7 @@ export const playground = {
   },
   async 'demo16: loop over the store with a cursor'() {
     const db3 = await openDB('db3', 4);
-    // open a readonly transaction:
+    // open a 'readonly' transaction:
     let store = db3.transaction('moreCats').store;
     // create a cursor, inspect where it's pointing at:
     let cursor = await store.openCursor();
@@ -249,7 +250,7 @@ export const playground = {
     console.log('cursor.value: ', cursor.value);
 
     // keep moving until the end of the store
-    // while looking for cats with strength and speed both greater than 8
+    // look for cats with strength and speed both greater than 8
     while (true) {
       const { strength, speed } = cursor.value;
       if (strength >= 8 && speed >= 8) {
@@ -278,7 +279,7 @@ export const playground = {
     let cursor2 = await index.openCursor();
     // cursor.key will be the key of the index:
     console.log('cursor2.key:', cursor2.key);
-    // the primary key will be in cursor.primary key:
+    // the primary key will be located in cursor.primaryKey:
     console.log('cursor2.primaryKey:', cursor2.primaryKey);
     // it's the first item in the index, so it's a cat with strength 0
     console.log('cursor2.value:', cursor2.value);
