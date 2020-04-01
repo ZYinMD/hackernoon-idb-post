@@ -197,13 +197,12 @@ export const playground = {
     });
     db3.close();
   },
-  async 'demo13: query the index'() {
+  async 'demo13: use key to get values from index'() {
     const db3 = await openDB('db3', 4);
     const transaction = db3.transaction('moreCats');
     const strengthIndex = transaction.store.index('strengthIndex');
     // get all entries where the key is 10:
     let strongestCats = await strengthIndex.getAll(10);
-
     console.log('strongest cats: ', strongestCats);
     // get the first entry where the key is 10:
     let oneStrongCat = await strengthIndex.get(10);
@@ -217,6 +216,72 @@ export const playground = {
     console.log('weakest cats: ', weakestCats);
     let oneWeakCat = await db3.getFromIndex('moreCats', 'strengthIndex', 0);
     console.log('a weak cat: ', oneWeakCat);
+    db3.close();
+  },
+  async 'demo15: find items matching a condition by using range'() {
+    const db3 = await openDB('db3', 4);
+    // create some ranges. Note that IDBKeyRange is not imported from idb:
+    const strongRange = IDBKeyRange.lowerBound(8);
+    const midRange = IDBKeyRange.bound(3, 7);
+    const weakRange = IDBKeyRange.upperBound(2);
+    let [strongCats, ordinaryCats, weakCats] = [
+      await db3.getAllFromIndex('moreCats', 'strengthIndex', strongRange),
+      await db3.getAllFromIndex('moreCats', 'strengthIndex', midRange),
+      await db3.getAllFromIndex('moreCats', 'strengthIndex', weakRange),
+    ];
+    console.log('strong cats (strength >= 8): ', strongCats);
+    console.log('ordinary cats (strength from 3 to 7): ', ordinaryCats);
+    console.log('weak cats (strength <=2): ', weakCats);
+    db3.close();
+  },
+  async 'demo16: loop over the store with a cursor'() {
+    const db3 = await openDB('db3', 4);
+    // open a readonly transaction:
+    let store = db3.transaction('moreCats').store;
+    // create a cursor, inspect where it's pointing at:
+    let cursor = await store.openCursor();
+    console.log('cursor.key: ', cursor.key);
+    console.log('cursor.value: ', cursor.value);
+    // move to next position:
+    cursor = await cursor.continue();
+    // inspect the new position:
+    console.log('cursor.key: ', cursor.key);
+    console.log('cursor.value: ', cursor.value);
+
+    // keep moving until the end of the store
+    // while looking for cats with strength and speed both greater than 8
+    while (true) {
+      const { strength, speed } = cursor.value;
+      if (strength >= 8 && speed >= 8) {
+        console.log('found a good cat! ', cursor.value);
+      }
+      cursor = await cursor.continue();
+      if (!cursor) break;
+    }
+    db3.close();
+  },
+  async 'demo17: use cursor on an index'() {
+    const db3 = await openDB('db3', 4);
+    let store = db3.transaction('moreCats').store;
+    // create a cursor on a very small range:
+    const range = IDBKeyRange.bound('cat042', 'cat045');
+    let cursor1 = await store.openCursor(range);
+    // loop over the range:
+    while (true) {
+      console.log('cursor1.key: ', cursor1.key);
+      cursor1 = await cursor1.continue();
+      if (!cursor1) break;
+    }
+    console.log('------------');
+    // create a cursor on an index:
+    let index = db3.transaction('moreCats').store.index('strengthIndex');
+    let cursor2 = await index.openCursor();
+    // cursor.key will be the key of the index:
+    console.log('cursor2.key:', cursor2.key);
+    // the primary key will be in cursor.primary key:
+    console.log('cursor2.primaryKey:', cursor2.primaryKey);
+    // it's the first item in the index, so it's a cat with strength 0
+    console.log('cursor2.value:', cursor2.value);
     db3.close();
   },
 };
