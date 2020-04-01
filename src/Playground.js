@@ -260,7 +260,7 @@ export const playground = {
     }
     db3.close();
   },
-  async 'demo17: use cursor on an index'() {
+  async 'demo17: use cursor on a range and/or on an index '() {
     const db3 = await openDB('db3', 4);
     let store = db3.transaction('moreCats').store;
     // create a cursor on a very small range:
