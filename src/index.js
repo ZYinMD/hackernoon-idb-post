@@ -1,10 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { playground } from './playground';
+import { demos } from './demos';
 
 ReactDOM.render(
   <React.StrictMode>
-    {Object.entries(playground).map(entry => {
+    <h1>idb demos for a blogpost. </h1>
+    <h2>demos are supposed to be clicked sequentially, skipping and jumping may cause errors.</h2>
+    {Object.entries(demos).map(entry => {
       const [key, value] = entry;
       return (
         <div key={key}>

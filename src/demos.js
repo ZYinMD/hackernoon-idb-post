@@ -1,6 +1,6 @@
 import { openDB } from 'idb';
 
-export const playground = {
+export const demos = {
   'demo1: Getting started'() {
     openDB('db1', 1, {
       upgrade(db) {
